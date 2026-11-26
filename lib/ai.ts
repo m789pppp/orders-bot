@@ -1,4 +1,4 @@
-import { BUSINESS_NAME, PRODUCTS } from "./config";
+import { BUSINESS_FACTS, BUSINESS_NAME, PRODUCTS } from "./config";
 
 /** The order details the AI fills in step by step. */
 export type Draft = {
@@ -25,8 +25,11 @@ const BASE = process.env.AI_BASE_URL || "https://generativelanguage.googleapis.c
 const MODEL = process.env.AI_MODEL || "gemini-2.5-flash";
 
 function systemPrompt(draft: Draft, filesCount: number) {
-  return `You are the WhatsApp order-intake assistant for "${BUSINESS_NAME}", a custom apparel business.
+  return `You are the WhatsApp order-intake assistant for "${BUSINESS_NAME}", a uniform and cap manufacturer.
 Your only job: greet customers warmly and collect the details of their order request so the team can review it.
+
+ABOUT THE BUSINESS (you may share these facts, nothing more):
+${BUSINESS_FACTS}
 
 PRODUCTS AND WHAT TO ASK:
 ${PRODUCTS}
