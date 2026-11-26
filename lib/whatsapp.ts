@@ -3,6 +3,32 @@ import crypto from "crypto";
 const GRAPH = "https://graph.facebook.com/v23.0";
 const token = () => (process.env.WHATSAPP_ACCESS_TOKEN ?? "").trim();
 
+let cachedPhoneId: string | null = null;
+
+/**
+ * The WhatsApp phone number id to send from. Uses WHATSAPP_PHONE_NUMBER_ID when set; otherwise finds
+ * the first phone number of the WhatsApp Business Account this token can access.
+ */
+export async function phoneNumberId(): Promise<string> {
+  const fromEnv = (process.env.WHATSAPP_PHONE_NUMBER_ID ?? "").trim();
+  if (fromEnv) return fromEnv;
+  if (cachedPhoneId) return cachedPhoneId;
+  for (const waba of await wabaIds()) {
+    const r = await fetch(`${GRAPH}/${waba}/phone_numbers?fields=id,display_phone_number`, { headers: { Authorization: `Bearer ${token()}` } });
+    const json = await r.json();
+    const id = json?.data?.[0]?.id;
+    if (id) return (cachedPhoneId = id);
+  }
+  throw new Error("No WhatsApp phone number found for this token");
+}
+
+/** WhatsApp Business Account ids this token has access to. */
+export async function wabaIds(): Promise<string[]> {
+  const dbg = await fetch(`${GRAPH}/debug_token?input_token=${token()}`, { headers: { Authorization: `Bearer ${token()}` } }).then((r) => r.json());
+  const scopes: { scope: string; target_ids?: string[] }[] = dbg?.data?.granular_scopes ?? [];
+  return Array.from(new Set(scopes.filter((s) => s.scope.startsWith("whatsapp")).flatMap((s) => s.target_ids ?? [])));
+}
+
 /** Checks that the request really came from Meta (X-Hub-Signature-256). */
 export function verifySignature(rawBody: string, header: string | null): boolean {
   const secret = process.env.META_APP_SECRET?.trim();
@@ -16,7 +42,7 @@ export function verifySignature(rawBody: string, header: string | null): boolean
 /** Sends a text message. Returns the WhatsApp message id, or null if it failed. */
 export async function sendText(to: string, body: string): Promise<string | null> {
   try {
-    const res = await fetch(`${GRAPH}/${(process.env.WHATSAPP_PHONE_NUMBER_ID ?? "").trim()}/messages`, {
+    const res = await fetch(`${GRAPH}/${await phoneNumberId()}/messages`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token()}`, "Content-Type": "application/json" },
       body: JSON.stringify({ messaging_product: "whatsapp", to, type: "text", text: { body } }),
@@ -47,7 +73,7 @@ export async function downloadMedia(mediaId: string): Promise<{ data: ArrayBuffe
 /** Sends an image by public/signed link. Returns the WhatsApp message id, or null if it failed. */
 export async function sendImage(to: string, link: string, caption?: string): Promise<string | null> {
   try {
-    const res = await fetch(`${GRAPH}/${(process.env.WHATSAPP_PHONE_NUMBER_ID ?? "").trim()}/messages`, {
+    const res = await fetch(`${GRAPH}/${await phoneNumberId()}/messages`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token()}`, "Content-Type": "application/json" },
       body: JSON.stringify({ messaging_product: "whatsapp", to, type: "image", image: { link, ...(caption ? { caption } : {}) } }),

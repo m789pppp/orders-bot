@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, BUCKET } from "@/lib/supabase/admin";
 import { listModels } from "@/lib/ai";
+import { phoneNumberId } from "@/lib/whatsapp";
 
 export const dynamic = "force-dynamic";
 
@@ -18,9 +19,15 @@ export async function GET(req: NextRequest) {
   }
   const fix = req.nextUrl.searchParams.get("fix") === "1";
   const token = (process.env.WHATSAPP_ACCESS_TOKEN ?? "").trim();
-  const phoneId = (process.env.WHATSAPP_PHONE_NUMBER_ID ?? "").trim();
-  const auth = { Authorization: `Bearer ${token}` };
   const report: Record<string, unknown> = {};
+  let phoneId = "";
+  try {
+    phoneId = await phoneNumberId();
+  } catch (e) {
+    report.phone_id_error = String(e);
+  }
+  report.phone_id_source = process.env.WHATSAPP_PHONE_NUMBER_ID?.trim() ? "setting" : "auto";
+  const auth = { Authorization: `Bearer ${token}` };
 
   // 1) Database
   for (const table of ["customers", "conversations", "messages", "orders", "attachments"]) {
@@ -53,6 +60,8 @@ export async function GET(req: NextRequest) {
       }
       const list = await fetch(`${GRAPH}/${waba}/subscribed_apps`, { headers: auth }).then((r) => r.json());
       report[`subscribed_apps_${waba}`] = list;
+      const phones = await fetch(`${GRAPH}/${waba}/phone_numbers?fields=id,display_phone_number,verified_name,status`, { headers: auth }).then((r) => r.json());
+      report[`phone_numbers_${waba}`] = phones;
     }
   } catch (e) {
     report.waba = `ERROR: ${String(e)}`;
