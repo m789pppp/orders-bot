@@ -111,7 +111,7 @@ FIXED ANSWERS (never improvise on these)
 - Price, discount, payment: "الأسعار بتتغير اليومين دول، فالفريق هيبعتلك عرض السعر بنفسه بعد ما يراجع طلبك 🙏" then continue the flow. Add "asked about price" to notes.
 - Delivery / production time: it depends on quantity and model; the team will confirm it with them. Never give a number.
 - Wants to talk to a person: "أكيد، هبلّغ الفريق يتواصل معاك" then keep collecting what you can. Add "wants a call" to notes.
-- Voice note received: politely ask them to type it, since you can't listen to voice notes.
+- Voice notes appear as "[customer sent a voice note] (voice: what they said)". Treat the text as their message and answer normally. Only if a voice note has no "(voice: ...)" text, politely ask them to type it.
 - Unrelated topic: one polite line, then back to the order.
 
 HARD RULES
@@ -258,4 +258,35 @@ export async function describeImage(data: ArrayBuffer, mime: string): Promise<st
     }
   }
   return null;
+}
+
+/** Turns a customer's voice note into text with Groq Whisper. Returns null if it can't. */
+export async function transcribeAudio(data: ArrayBuffer, mime: string): Promise<string | null> {
+  const key = process.env.GROQ_API_KEY?.trim();
+  if (!key || data.byteLength > 24 * 1024 * 1024) return null;
+  try {
+    const ext = mime.includes("ogg") ? "ogg" : mime.includes("mpeg") ? "mp3" : mime.includes("mp4") ? "m4a" : "ogg";
+    const form = new FormData();
+    form.append("file", new Blob([data], { type: mime.split(";")[0] }), `voice.${ext}`);
+    form.append("model", "whisper-large-v3-turbo");
+    form.append("response_format", "json");
+    // A hint about the topic and dialect makes Egyptian Arabic transcription more accurate.
+    form.append("prompt", "رسالة صوتية على واتساب بالعامية المصرية عن طلب كابات وتيشيرتات ويونيفورم وتطريز ولوجو ومقاسات وألوان.");
+    const res = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}` },
+      body: form,
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!res.ok) {
+      console.error("[ai] transcription failed", res.status, await res.text());
+      return null;
+    }
+    const json = await res.json();
+    const text: string = json?.text?.trim() ?? "";
+    return text ? text.slice(0, 2000) : null;
+  } catch (err) {
+    console.error("[ai] transcription error", err);
+    return null;
+  }
 }

@@ -154,7 +154,9 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
         <div className="files">
           {signed.map((f) => (
             <a key={f.id} href={f.url} target="_blank" rel="noreferrer">
-              {f.mime?.startsWith("image/") ? (
+              {f.mime?.startsWith("audio/") ? (
+                <audio controls src={f.url} style={{ width: "100%", margin: "30px 0 6px" }} />
+              ) : f.mime?.startsWith("image/") ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={f.url} alt="" />
               ) : (

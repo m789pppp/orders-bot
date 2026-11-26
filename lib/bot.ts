@@ -1,6 +1,6 @@
 import { db, BUCKET } from "./supabase/admin";
 import { downloadMedia, sendImage, sendText } from "./whatsapp";
-import { describeImage, runAssistant, type ChatLine, type Draft } from "./ai";
+import { describeImage, runAssistant, transcribeAudio, type ChatLine, type Draft } from "./ai";
 import { CATALOG } from "./config";
 import { THANK_YOU } from "./config";
 import { notifyNewOrder } from "./notify";
@@ -59,7 +59,7 @@ export async function saveIncoming(msg: WaMessage, profileName: string): Promise
   await supabase.from("conversations").update({ last_message_at: new Date().toISOString() }).eq("id", conv.id);
 
   // Save images and files.
-  const media = msg.image ?? msg.document ?? msg.video;
+  const media = msg.image ?? msg.document ?? msg.video ?? msg.audio;
   if (media) {
     try {
       const file = await downloadMedia(media.id);
@@ -74,10 +74,16 @@ export async function saveIncoming(msg: WaMessage, profileName: string): Promise
         size_bytes: file.size,
         original_name: msg.document?.filename ?? null,
       });
-      // Let the assistant "see" the image: store a short description with the message.
-      const seen = await describeImage(file.data, file.mime);
-      if (seen) {
-        await supabase.from("messages").update({ body: [body, `(image: ${seen})`].filter(Boolean).join(" ") }).eq("wamid", msg.id);
+      if (msg.audio) {
+        // Let the assistant "hear" the voice note: store what was said with the message.
+        const said = await transcribeAudio(file.data, file.mime);
+        if (said) await supabase.from("messages").update({ body: `(voice: ${said})` }).eq("wamid", msg.id);
+      } else {
+        // Let the assistant "see" the image: store a short description with the message.
+        const seen = await describeImage(file.data, file.mime);
+        if (seen) {
+          await supabase.from("messages").update({ body: [body, `(image: ${seen})`].filter(Boolean).join(" ") }).eq("wamid", msg.id);
+        }
       }
     } catch (err) {
       console.error("[bot] media save failed", err);
