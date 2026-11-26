@@ -110,7 +110,7 @@ export async function replyToConversation(conversationId: string, wamid: string,
     .select("direction,type,body")
     .eq("conversation_id", conversationId)
     .order("created_at", { ascending: false })
-    .limit(30);
+    .limit(16);
   const history: ChatLine[] = (rows ?? []).reverse().map((m) => {
     const fileNote =
       m.type === "audio" ? "[customer sent a voice note]" : m.type !== "text" ? `[customer sent a ${m.type} file]` : "";
