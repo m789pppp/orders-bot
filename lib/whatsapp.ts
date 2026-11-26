@@ -1,11 +1,11 @@
 import crypto from "crypto";
 
 const GRAPH = "https://graph.facebook.com/v23.0";
-const token = () => process.env.WHATSAPP_ACCESS_TOKEN!;
+const token = () => (process.env.WHATSAPP_ACCESS_TOKEN ?? "").trim();
 
 /** Checks that the request really came from Meta (X-Hub-Signature-256). */
 export function verifySignature(rawBody: string, header: string | null): boolean {
-  const secret = process.env.META_APP_SECRET;
+  const secret = process.env.META_APP_SECRET?.trim();
   if (!secret || !header?.startsWith("sha256=")) return false;
   const expected = crypto.createHmac("sha256", secret).update(rawBody, "utf8").digest("hex");
   const got = header.slice(7);
@@ -16,7 +16,7 @@ export function verifySignature(rawBody: string, header: string | null): boolean
 /** Sends a text message. Returns the WhatsApp message id, or null if it failed. */
 export async function sendText(to: string, body: string): Promise<string | null> {
   try {
-    const res = await fetch(`${GRAPH}/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`, {
+    const res = await fetch(`${GRAPH}/${(process.env.WHATSAPP_PHONE_NUMBER_ID ?? "").trim()}/messages`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token()}`, "Content-Type": "application/json" },
       body: JSON.stringify({ messaging_product: "whatsapp", to, type: "text", text: { body } }),

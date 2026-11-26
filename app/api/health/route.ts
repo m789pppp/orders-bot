@@ -15,5 +15,11 @@ export async function GET() {
     "AI_API_KEY",
   ];
   const settings = Object.fromEntries(keys.map((k) => [k, process.env[k] ? "OK" : "MISSING"]));
-  return NextResponse.json({ running: true, settings });
+  // Lengths help spot copy/paste mistakes without revealing the values.
+  const lengths = {
+    META_APP_SECRET: process.env.META_APP_SECRET?.length ?? 0,
+    WHATSAPP_PHONE_NUMBER_ID: process.env.WHATSAPP_PHONE_NUMBER_ID?.length ?? 0,
+    WHATSAPP_ACCESS_TOKEN: process.env.WHATSAPP_ACCESS_TOKEN?.length ?? 0,
+  };
+  return NextResponse.json({ running: true, settings, lengths });
 }
