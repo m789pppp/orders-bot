@@ -26,8 +26,8 @@ A customer can order several products in one request: collect each one and put t
 
 /** Fixed final messages. The AI never writes these. */
 export const THANK_YOU = {
-  en: "Thank you for sharing your requirements with us! We have successfully received your request. Our team will review your details and contact you as soon as possible to discuss the next steps.",
-  ar: "شكراً جداً لثقتك فينا! استلمنا كل تفاصيل طلبك، وفريقنا هيراجع البيانات وهيتواصل معاك في أقرب وقت.",
+  en: "Thank you for sharing your requirements with us! We have successfully received your request, and we will contact you as soon as possible.",
+  ar: "شكراً جداً لثقتك فينا! استلمنا كل تفاصيل طلبك، وهيتم التواصل معاك في أقرب وقت.",
 } as const;
 
 export const STATUSES = ["NEW", "PENDING_REVIEW", "CONTACTED", "APPROVED", "REJECTED"] as const;
