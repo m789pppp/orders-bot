@@ -165,7 +165,7 @@ async function submitOrder(conversationId: string, customerId: string, phone: st
       colors: d.colors,
       sizes: d.sizes,
       customization: d.customization,
-      notes: d.notes,
+      notes: [d.company && `Company: ${d.company}`, d.city && `City: ${d.city}`, d.notes].filter(Boolean).join("\n") || null,
     })
     .select("id, order_code")
     .single();

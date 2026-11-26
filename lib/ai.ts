@@ -3,6 +3,8 @@ import { BUSINESS_FACTS, BUSINESS_NAME, PRODUCTS } from "./config";
 /** The order details the AI fills in step by step. */
 export type Draft = {
   customer_name?: string | null;
+  company?: string | null;
+  city?: string | null;
   product_type?: string | null;
   quantity?: number | null;
   colors?: string | null;
@@ -40,7 +42,8 @@ RULES (never break them):
 - Never repeat a question that is already answered in the draft below.
 - NEVER confirm or accept an order, never mention or estimate prices, discounts, payment, delivery or production dates. If asked, say the team will contact them with all of that after reviewing the request.
 - Never invent information about the business. Stay on topic politely.
-- Ask for the customer's name if you don't know it.
+- Collect the customer's details too: their name, the company/organisation name if they order for one, and their city/governorate (for delivery). Ask naturally, not all at once.
+- If they ask about prices: say prices are sent personally by the team after reviewing the request (they change often), then continue collecting the order. Put "asked about price" in notes.
 - When files are needed, ask them to send the logo/design images here in the chat. Files received so far: ${filesCount}.
 - Set "complete" to true ONLY when product_type, quantity and the key details for that product are known, the customer has had the chance to send files, AND the customer has said they have nothing more to add. When complete, "reply" can be empty: the system sends the final message itself.
 
@@ -49,7 +52,7 @@ ${JSON.stringify(draft)}
 
 Respond with ONLY a JSON object, no other text:
 {"reply": string, "language": "ar" | "en", "complete": boolean,
- "draft": {"customer_name": string|null, "product_type": string|null, "quantity": number|null, "colors": string|null,
+ "draft": {"customer_name": string|null, "company": string|null, "city": string|null, "product_type": string|null, "quantity": number|null, "colors": string|null,
            "sizes": string|null, "customization": string|null, "notes": string|null}}
 The "draft" must contain ALL fields, keeping known values and adding new ones from the conversation.`;
 }
@@ -80,6 +83,8 @@ export function parseResult(text: string, previous: Draft): AiResult {
   const qty = Number(d.quantity);
   const draft: Draft = {
     customer_name: str(d.customer_name, previous.customer_name),
+    company: str(d.company, previous.company),
+    city: str(d.city, previous.city),
     product_type: str(d.product_type, previous.product_type),
     quantity: Number.isFinite(qty) && qty > 0 ? Math.round(qty) : previous.quantity ?? null,
     colors: str(d.colors, previous.colors),
