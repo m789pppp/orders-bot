@@ -130,6 +130,7 @@ Respond with ONLY a JSON object, no other text:
 
 async function callModel(model: string, history: ChatLine[], draft: Draft, ctx: PromptContext) {
   return fetch(`${BASE}/chat/completions`, {
+    signal: AbortSignal.timeout(20000),
     method: "POST",
     headers: { Authorization: `Bearer ${KEY()}`, "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -211,7 +212,7 @@ async function visionTargets(): Promise<{ base: string; key: string; model: stri
   const gemini = process.env.AI_API_KEY?.trim();
   if (gemini) {
     const gBase = "https://generativelanguage.googleapis.com/v1beta/openai";
-    for (const m of ["gemini-3.8-flash", "gemini-flash-latest", "gemini-3.5-flash"]) targets.push({ base: gBase, key: gemini, model: m });
+    for (const m of ["gemini-3.8-flash", "gemini-3.5-flash"]) targets.push({ base: gBase, key: gemini, model: m });
   }
   return targets;
 }
@@ -226,6 +227,7 @@ export async function describeImage(data: ArrayBuffer, mime: string): Promise<st
   for (const t of await visionTargets()) {
     try {
       const res = await fetch(`${t.base}/chat/completions`, {
+        signal: AbortSignal.timeout(9000), // never let image reading block the reply
         method: "POST",
         headers: { Authorization: `Bearer ${t.key}`, "Content-Type": "application/json" },
         body: JSON.stringify({
