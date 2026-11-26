@@ -57,7 +57,15 @@ export async function GET(req: NextRequest) {
     report.waba = `ERROR: ${String(e)}`;
   }
 
-  // 4) Last webhook calls received (traces saved by /api/webhook)
+  // 4) Last saved messages and their errors
+  const { data: msgs, error: msgErr } = await db()
+    .from("messages")
+    .select("direction, type, body, error, created_at")
+    .order("created_at", { ascending: false })
+    .limit(8);
+  report.last_messages = msgErr ? `ERROR: ${msgErr.message}` : msgs;
+
+  // 5) Last webhook calls received (traces saved by /api/webhook)
   try {
     const { data: files } = await db().storage.from(BUCKET).list("debug", { limit: 5, sortBy: { column: "name", order: "desc" } });
     report.webhook_calls_seen = files?.length ?? 0;
