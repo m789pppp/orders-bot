@@ -106,7 +106,8 @@ export async function replyToConversation(conversationId: string, wamid: string,
     .order("created_at", { ascending: false })
     .limit(30);
   const history: ChatLine[] = (rows ?? []).reverse().map((m) => {
-    const fileNote = m.type !== "text" ? `[customer sent a ${m.type} file]` : "";
+    const fileNote =
+      m.type === "audio" ? "[customer sent a voice note]" : m.type !== "text" ? `[customer sent a ${m.type} file]` : "";
     return {
       role: m.direction === "in" ? "user" : "assistant",
       content: [fileNote, m.body].filter(Boolean).join(" ") || "[empty]",
@@ -118,9 +119,25 @@ export async function replyToConversation(conversationId: string, wamid: string,
     .select("id", { count: "exact", head: true })
     .eq("conversation_id", conversationId);
 
+  // Recent order from the same customer (last 3 days), so the assistant can ask if this is an addition.
+  const since = new Date(Date.now() - 3 * 24 * 3600 * 1000).toISOString();
+  const { data: recent } = await supabase
+    .from("orders")
+    .select("order_code")
+    .eq("customer_id", conv.customer_id)
+    .gte("submitted_at", since)
+    .order("submitted_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const firstMessage = !(rows ?? []).some((m) => m.direction === "out");
+
   let result;
   try {
-    result = await runAssistant(history, (conv.draft ?? {}) as Draft, filesCount ?? 0);
+    result = await runAssistant(history, (conv.draft ?? {}) as Draft, {
+      filesCount: filesCount ?? 0,
+      firstMessage,
+      previousOrder: firstMessage ? recent?.order_code ?? null : null,
+    });
   } catch (err) {
     console.error("[bot] AI failed", err);
     await supabase.from("messages").update({ error: String(err).slice(0, 1500) }).eq("wamid", wamid);
