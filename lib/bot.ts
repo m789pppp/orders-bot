@@ -123,7 +123,14 @@ export async function replyToConversation(conversationId: string, wamid: string,
     result = await runAssistant(history, (conv.draft ?? {}) as Draft, filesCount ?? 0);
   } catch (err) {
     console.error("[bot] AI failed", err);
-    await supabase.from("messages").update({ error: String(err).slice(0, 500) }).eq("wamid", wamid);
+    await supabase.from("messages").update({ error: String(err).slice(0, 1500) }).eq("wamid", wamid);
+    // Don't leave the customer without an answer.
+    const sorry =
+      conv.language === "en"
+        ? "Sorry, we're getting a lot of messages right now. Please send your message again in a minute."
+        : "معلش عندنا ضغط رسايل دلوقتي 🙏 ابعت رسالتك تاني بعد دقيقة.";
+    const outId = await sendText(phone, sorry);
+    await supabase.from("messages").insert({ conversation_id: conversationId, wamid: outId, direction: "out", type: "text", body: sorry });
     return;
   }
 

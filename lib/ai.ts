@@ -35,12 +35,19 @@ export async function listModels(): Promise<string[]> {
   return (json?.data ?? []).map((m: { id: string }) => m.id.replace(/^models\//, ""));
 }
 
-/** Picks a fast text model that exists for this key (Google retires models often). */
-async function pickFallbackModel(): Promise<string | null> {
-  const ids = await listModels();
-  const usable = ids.filter((id) => id.includes("flash") && !/(image|tts|audio|live|embedding|preview)/.test(id));
-  usable.sort((a, b) => (b.includes("lite") ? -1 : 0) - (a.includes("lite") ? -1 : 0) || b.localeCompare(a, undefined, { numeric: true }));
-  return usable[0] ?? ids.find((id) => id.includes("gemini")) ?? null;
+const isTextFlash = (id: string) => id.includes("flash") && !/(image|tts|audio|live|embedding|preview|omni)/.test(id);
+
+/** Models to try, best first: the preferred one, then other fast text models this key can use. */
+async function candidateModels(): Promise<string[]> {
+  let ids: string[] = [];
+  try {
+    ids = (await listModels()).filter(isTextFlash);
+  } catch {
+    // listing failed: just use the preferred model
+  }
+  const full = ids.filter((id) => !id.includes("lite")).sort((a, b) => b.localeCompare(a, undefined, { numeric: true }));
+  const lite = ids.filter((id) => id.includes("lite")).sort((a, b) => b.localeCompare(a, undefined, { numeric: true }));
+  return Array.from(new Set([resolvedModel ?? PREFERRED, PREFERRED, ...full, ...lite])).filter(Boolean).slice(0, 5);
 }
 
 function systemPrompt(draft: Draft, filesCount: number) {
@@ -88,18 +95,24 @@ async function callModel(model: string, history: ChatLine[], draft: Draft, files
 }
 
 export async function runAssistant(history: ChatLine[], draft: Draft, filesCount: number): Promise<AiResult> {
-  let model = resolvedModel ?? PREFERRED;
-  let res = await callModel(model, history, draft, filesCount);
-  if (res.status === 404 || res.status === 400) {
-    // The model name is retired or unknown: find one that exists and retry once.
-    const fallback = await pickFallbackModel();
-    if (fallback && fallback !== model) {
-      model = fallback;
+  const errors: string[] = [];
+  let res: Response | null = null;
+  // Google models get busy (503/429) or retired (404): try the next model instead of failing.
+  for (const model of await candidateModels()) {
+    try {
       res = await callModel(model, history, draft, filesCount);
+    } catch (e) {
+      errors.push(`${model}: ${String(e)}`);
+      continue;
     }
+    if (res.ok) {
+      resolvedModel = model;
+      break;
+    }
+    errors.push(`${model}: ${res.status} ${(await res.text()).slice(0, 200)}`);
+    res = null;
   }
-  if (!res.ok) throw new Error(`AI error ${res.status} (model ${model}): ${await res.text()}`);
-  resolvedModel = model;
+  if (!res) throw new Error(`AI error, all models failed: ${errors.join(" | ")}`);
   const json = await res.json();
   const text: string = json?.choices?.[0]?.message?.content ?? "";
   return parseResult(text, draft);
