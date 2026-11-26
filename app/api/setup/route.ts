@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, BUCKET } from "@/lib/supabase/admin";
+import { listModels } from "@/lib/ai";
 
 export const dynamic = "force-dynamic";
 
@@ -55,6 +56,14 @@ export async function GET(req: NextRequest) {
     }
   } catch (e) {
     report.waba = `ERROR: ${String(e)}`;
+  }
+
+  // AI models available to this key
+  try {
+    const ids = await listModels();
+    report.ai_models_flash = ids.filter((id) => id.includes("flash"));
+  } catch (e) {
+    report.ai_models_flash = `ERROR: ${String(e)}`;
   }
 
   // 4) Last saved messages and their errors

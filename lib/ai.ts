@@ -24,7 +24,24 @@ export type ChatLine = { role: "user" | "assistant"; content: string };
 
 // Works with any OpenAI-compatible API. Default: Google Gemini (free key from aistudio.google.com).
 const BASE = process.env.AI_BASE_URL || "https://generativelanguage.googleapis.com/v1beta/openai";
-const MODEL = process.env.AI_MODEL || "gemini-2.5-flash";
+const PREFERRED = process.env.AI_MODEL?.trim() || "gemini-3.8-flash";
+let resolvedModel: string | null = null;
+
+/** Lists the models this API key can use (OpenAI-compatible /models). */
+export async function listModels(): Promise<string[]> {
+  const res = await fetch(`${BASE}/models`, { headers: { Authorization: `Bearer ${process.env.AI_API_KEY?.trim()}` } });
+  if (!res.ok) throw new Error(`models list ${res.status}: ${await res.text()}`);
+  const json = await res.json();
+  return (json?.data ?? []).map((m: { id: string }) => m.id.replace(/^models\//, ""));
+}
+
+/** Picks a fast text model that exists for this key (Google retires models often). */
+async function pickFallbackModel(): Promise<string | null> {
+  const ids = await listModels();
+  const usable = ids.filter((id) => id.includes("flash") && !/(image|tts|audio|live|embedding|preview)/.test(id));
+  usable.sort((a, b) => (b.includes("lite") ? -1 : 0) - (a.includes("lite") ? -1 : 0) || b.localeCompare(a, undefined, { numeric: true }));
+  return usable[0] ?? ids.find((id) => id.includes("gemini")) ?? null;
+}
 
 function systemPrompt(draft: Draft, filesCount: number) {
   return `You are the WhatsApp order-intake assistant for "${BUSINESS_NAME}", a uniform and cap manufacturer.
@@ -57,18 +74,32 @@ Respond with ONLY a JSON object, no other text:
 The "draft" must contain ALL fields, keeping known values and adding new ones from the conversation.`;
 }
 
-export async function runAssistant(history: ChatLine[], draft: Draft, filesCount: number): Promise<AiResult> {
-  const res = await fetch(`${BASE}/chat/completions`, {
+async function callModel(model: string, history: ChatLine[], draft: Draft, filesCount: number) {
+  return fetch(`${BASE}/chat/completions`, {
     method: "POST",
-    headers: { Authorization: `Bearer ${process.env.AI_API_KEY}`, "Content-Type": "application/json" },
+    headers: { Authorization: `Bearer ${process.env.AI_API_KEY?.trim()}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: MODEL,
+      model,
       temperature: 0.4,
       response_format: { type: "json_object" },
       messages: [{ role: "system", content: systemPrompt(draft, filesCount) }, ...history],
     }),
   });
-  if (!res.ok) throw new Error(`AI error ${res.status}: ${await res.text()}`);
+}
+
+export async function runAssistant(history: ChatLine[], draft: Draft, filesCount: number): Promise<AiResult> {
+  let model = resolvedModel ?? PREFERRED;
+  let res = await callModel(model, history, draft, filesCount);
+  if (res.status === 404 || res.status === 400) {
+    // The model name is retired or unknown: find one that exists and retry once.
+    const fallback = await pickFallbackModel();
+    if (fallback && fallback !== model) {
+      model = fallback;
+      res = await callModel(model, history, draft, filesCount);
+    }
+  }
+  if (!res.ok) throw new Error(`AI error ${res.status} (model ${model}): ${await res.text()}`);
+  resolvedModel = model;
   const json = await res.json();
   const text: string = json?.choices?.[0]?.message?.content ?? "";
   return parseResult(text, draft);
