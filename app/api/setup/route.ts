@@ -61,9 +61,10 @@ export async function GET(req: NextRequest) {
   // AI models available to this key
   try {
     const ids = await listModels();
-    report.ai_models_flash = ids.filter((id) => id.includes("flash"));
+    report.ai_provider = process.env.GROQ_API_KEY?.trim() ? "groq" : "gemini/other";
+    report.ai_models = process.env.GROQ_API_KEY?.trim() ? ids : ids.filter((id) => id.includes("flash"));
   } catch (e) {
-    report.ai_models_flash = `ERROR: ${String(e)}`;
+    report.ai_models = `ERROR: ${String(e)}`;
   }
 
   // 4) Last saved messages and their errors

@@ -23,25 +23,37 @@ export type AiResult = {
 export type ChatLine = { role: "user" | "assistant"; content: string };
 
 // Works with any OpenAI-compatible API. Default: Google Gemini (free key from aistudio.google.com).
-const BASE = process.env.AI_BASE_URL || "https://generativelanguage.googleapis.com/v1beta/openai";
-const PREFERRED = process.env.AI_MODEL?.trim() || "gemini-3.8-flash";
+// Provider: Groq when GROQ_API_KEY is set, otherwise AI_BASE_URL/AI_API_KEY (default Google Gemini).
+const GROQ = !!process.env.GROQ_API_KEY?.trim();
+const BASE = GROQ
+  ? "https://api.groq.com/openai/v1"
+  : process.env.AI_BASE_URL?.trim() || "https://generativelanguage.googleapis.com/v1beta/openai";
+const KEY = () => (GROQ ? process.env.GROQ_API_KEY : process.env.AI_API_KEY)?.trim() ?? "";
+const PREFERRED = process.env.AI_MODEL?.trim() || (GROQ ? "openai/gpt-oss-120b" : "gemini-3.8-flash");
 let resolvedModel: string | null = null;
 
 /** Lists the models this API key can use (OpenAI-compatible /models). */
 export async function listModels(): Promise<string[]> {
-  const res = await fetch(`${BASE}/models`, { headers: { Authorization: `Bearer ${process.env.AI_API_KEY?.trim()}` } });
+  const res = await fetch(`${BASE}/models`, { headers: { Authorization: `Bearer ${KEY()}` } });
   if (!res.ok) throw new Error(`models list ${res.status}: ${await res.text()}`);
   const json = await res.json();
   return (json?.data ?? []).map((m: { id: string }) => m.id.replace(/^models\//, ""));
 }
 
 const isTextFlash = (id: string) => id.includes("flash") && !/(image|tts|audio|live|embedding|preview|omni)/.test(id);
+// Good chat models on Groq, best first (only the ones this key actually has are used).
+const GROQ_ORDER = ["openai/gpt-oss-120b", "llama-3.3-70b-versatile", "moonshotai/kimi-k2", "qwen/qwen3", "openai/gpt-oss-20b"];
 
 /** Models to try, best first: the preferred one, then other fast text models this key can use. */
 async function candidateModels(): Promise<string[]> {
   let ids: string[] = [];
   try {
-    ids = (await listModels()).filter(isTextFlash);
+    const all = await listModels();
+    if (GROQ) {
+      const picked = GROQ_ORDER.flatMap((p) => all.filter((id) => id.startsWith(p)));
+      return Array.from(new Set([resolvedModel ?? PREFERRED, PREFERRED, ...picked])).slice(0, 4);
+    }
+    ids = all.filter(isTextFlash);
   } catch {
     // listing failed: just use the preferred model
   }
@@ -84,10 +96,12 @@ The "draft" must contain ALL fields, keeping known values and adding new ones fr
 async function callModel(model: string, history: ChatLine[], draft: Draft, filesCount: number) {
   return fetch(`${BASE}/chat/completions`, {
     method: "POST",
-    headers: { Authorization: `Bearer ${process.env.AI_API_KEY?.trim()}`, "Content-Type": "application/json" },
+    headers: { Authorization: `Bearer ${KEY()}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       model,
       temperature: 0.4,
+      // gpt-oss models think before answering: keep it short to save tokens and time.
+      ...(model.startsWith("openai/gpt-oss") ? { reasoning_effort: "low" } : {}),
       response_format: { type: "json_object" },
       messages: [{ role: "system", content: systemPrompt(draft, filesCount) }, ...history],
     }),

@@ -12,8 +12,8 @@ export async function GET() {
     "WHATSAPP_ACCESS_TOKEN",
     "META_APP_SECRET",
     "WEBHOOK_VERIFY_TOKEN",
-    "AI_API_KEY",
   ];
+  keys.push(process.env.GROQ_API_KEY ? "GROQ_API_KEY" : "AI_API_KEY");
   const settings = Object.fromEntries(keys.map((k) => [k, process.env[k] ? "OK" : "MISSING"]));
   // Lengths help spot copy/paste mistakes without revealing the values.
   const lengths = {
