@@ -1,5 +1,5 @@
 import { db, BUCKET } from "./supabase/admin";
-import { downloadMedia, sendImage, sendText } from "./whatsapp";
+import { downloadMedia, sendImage, sendText, showTyping } from "./whatsapp";
 import { describeImage, runAssistant, transcribeAudio, type ChatLine, type Draft } from "./ai";
 import { CATALOG } from "./config";
 import { THANK_YOU } from "./config";
@@ -107,6 +107,7 @@ export async function replyToConversation(conversationId: string, wamid: string,
     .limit(1)
     .single();
   if (latest?.wamid !== wamid) return; // a newer message arrived; it will reply to everything
+  await showTyping(wamid);
 
   const { data: conv } = await supabase.from("conversations").select("*").eq("id", conversationId).single();
   if (!conv || conv.status !== "collecting") return;

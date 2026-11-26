@@ -89,3 +89,17 @@ export async function sendImage(to: string, link: string, caption?: string): Pro
     return null;
   }
 }
+
+/** Marks the customer's message as read and shows "typing..." while the reply is prepared. */
+export async function showTyping(messageId: string): Promise<void> {
+  try {
+    await fetch(`${GRAPH}/${await phoneNumberId()}/messages`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token()}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ messaging_product: "whatsapp", status: "read", message_id: messageId, typing_indicator: { type: "text" } }),
+      signal: AbortSignal.timeout(5000),
+    });
+  } catch {
+    // cosmetic only
+  }
+}
