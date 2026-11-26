@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/supabase/admin";
+import { db, BUCKET } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -55,6 +55,20 @@ export async function GET(req: NextRequest) {
     }
   } catch (e) {
     report.waba = `ERROR: ${String(e)}`;
+  }
+
+  // 4) Last webhook calls received (traces saved by /api/webhook)
+  try {
+    const { data: files } = await db().storage.from(BUCKET).list("debug", { limit: 5, sortBy: { column: "name", order: "desc" } });
+    report.webhook_calls_seen = files?.length ?? 0;
+    report.last_webhook_calls = await Promise.all(
+      (files ?? []).map(async (f) => {
+        const { data } = await db().storage.from(BUCKET).download(`debug/${f.name}`);
+        return data ? JSON.parse(await data.text()) : f.name;
+      }),
+    );
+  } catch (e) {
+    report.last_webhook_calls = `ERROR: ${String(e)}`;
   }
 
   return NextResponse.json(report, { headers: { "Cache-Control": "no-store" } });

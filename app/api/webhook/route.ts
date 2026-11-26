@@ -1,6 +1,17 @@
 import { NextRequest, NextResponse, after } from "next/server";
 import { verifySignature } from "@/lib/whatsapp";
 import { saveIncoming, replyToConversation } from "@/lib/bot";
+import { db, BUCKET } from "@/lib/supabase/admin";
+
+/** Keeps a small trace of each webhook call in storage (debug/), so problems can be diagnosed. */
+async function trace(info: Record<string, unknown>) {
+  try {
+    const name = `debug/${new Date().toISOString().replace(/[:.]/g, "-")}.json`;
+    await db().storage.from(BUCKET).upload(name, JSON.stringify(info), { contentType: "application/json", upsert: true });
+  } catch {
+    // never break the webhook because of tracing
+  }
+}
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -17,7 +28,9 @@ export async function GET(req: NextRequest) {
 // 2) Meta sends every incoming message here.
 export async function POST(req: NextRequest) {
   const raw = await req.text();
-  if (!verifySignature(raw, req.headers.get("x-hub-signature-256"))) {
+  const sigOk = verifySignature(raw, req.headers.get("x-hub-signature-256"));
+  await trace({ at: new Date().toISOString(), sigOk, hasSigHeader: !!req.headers.get("x-hub-signature-256"), body: raw.slice(0, 1500) });
+  if (!sigOk) {
     console.warn("[webhook] bad signature, ignored");
     return new NextResponse("Invalid signature", { status: 401 });
   }
@@ -42,6 +55,7 @@ export async function POST(req: NextRequest) {
             if (conversationId) await replyToConversation(conversationId, msg.id, msg.from);
           } catch (err) {
             console.error("[webhook] processing failed", err);
+            await trace({ at: new Date().toISOString(), stage: "processing", error: String(err), detail: JSON.stringify(err).slice(0, 800) });
           }
         });
       }
