@@ -1,4 +1,4 @@
-import { BUSINESS_FACTS, BUSINESS_NAME, PRODUCTS } from "./config";
+import { BUSINESS_FACTS, BUSINESS_NAME, CATALOG, PRODUCTS, type CatalogKey } from "./config";
 
 /** The order details the AI fills in step by step. */
 export type Draft = {
@@ -18,6 +18,8 @@ export type AiResult = {
   language: "ar" | "en";
   draft: Draft;
   complete: boolean;
+  /** Photo album to send before the reply, if the customer wants to see models. */
+  sendCatalog: CatalogKey | null;
 };
 
 export type ChatLine = { role: "user" | "assistant"; content: string };
@@ -62,7 +64,13 @@ async function candidateModels(): Promise<string[]> {
   return Array.from(new Set([resolvedModel ?? PREFERRED, PREFERRED, ...full, ...lite])).filter(Boolean).slice(0, 5);
 }
 
-export type PromptContext = { filesCount: number; firstMessage: boolean; previousOrder?: string | null };
+export type PromptContext = {
+  filesCount: number;
+  firstMessage: boolean;
+  previousOrder?: string | null;
+  /** Albums that actually have photos, e.g. ["caps", "tshirts"]. */
+  albums: string[];
+};
 
 function systemPrompt(draft: Draft, ctx: PromptContext) {
   return `You are "مساعد ${BUSINESS_NAME}", the WhatsApp order assistant of ${BUSINESS_NAME}, a uniform and cap factory in Alexandria.
@@ -90,6 +98,11 @@ FLOW (follow in order, skip what is already known)
 7. SUMMARY: send a clear summary as lines starting with "•" (product, quantity, colours, sizes, branding, name, company, city) and ask "كده تمام ولا تحب تعدّل حاجة؟".
 8. Only when the customer confirms the summary in their latest message (تمام / أيوه / مظبوط / ok...) set "complete": true and leave "reply" empty. If they change something, update the draft and show the summary again.
 
+PHOTOS
+- Customer images appear in the chat as "[customer sent a image file] (image: description)". Use the description: if it is a logo, confirm it ("وصلني اللوجو 👌"); if it is a product photo or a design idea, describe briefly what you understood and use it to fill the draft (e.g. type, colour), then confirm with the customer.
+- You can send photo albums of our models. Albums available now: ${ctx.albums.length ? ctx.albums.join(", ") : "none"}.
+  When the customer asks to see models/photos, or is unsure which type to choose, set "send_catalog" to the matching album key and write a short reply like "دي بعض الموديلات عندنا 👇 تحب أنهي واحد؟". Use only album keys listed above; otherwise null. Never send the same album twice in a conversation.
+
 FIXED ANSWERS (never improvise on these)
 - Price, discount, payment: "الأسعار بتتغير اليومين دول، فالفريق هيبعتلك عرض السعر بنفسه بعد ما يراجع طلبك 🙏" then continue the flow. Add "asked about price" to notes.
 - Delivery / production time: it depends on quantity and model; the team will confirm it with them. Never give a number.
@@ -106,7 +119,7 @@ CURRENT DRAFT (what is already known):
 ${JSON.stringify(draft)}
 
 Respond with ONLY a JSON object, no other text:
-{"reply": string, "language": "ar" | "en", "complete": boolean,
+{"reply": string, "language": "ar" | "en", "complete": boolean, "send_catalog": string|null,
  "draft": {"customer_name": string|null, "company": string|null, "city": string|null, "product_type": string|null, "quantity": number|null, "colors": string|null,
            "sizes": string|null, "customization": string|null, "notes": string|null}}
 "draft" must contain ALL fields, keeping known values and adding new ones. For several products, list them all in product_type (e.g. "50 كاب Air Force + 30 بولو") and set quantity to the total.`;
@@ -173,7 +186,61 @@ export function parseResult(text: string, previous: Draft): AiResult {
     reply: typeof obj.reply === "string" ? obj.reply.trim().slice(0, 3000) : "",
     language: obj.language === "en" ? "en" : "ar",
     draft,
+    sendCatalog: CATALOG.some((c) => c.key === obj.send_catalog) ? (obj.send_catalog as CatalogKey) : null,
     // The code double-checks the minimum before accepting "complete".
     complete: obj.complete === true && !!draft.product_type && !!draft.quantity,
   };
+}
+
+/** Vision models to try: Groq's Llama 4 vision models, or the Gemini model (multimodal). */
+async function visionModels(): Promise<string[]> {
+  if (!GROQ) return Array.from(new Set([resolvedModel ?? PREFERRED, PREFERRED]));
+  try {
+    const all = await listModels();
+    const v = all.filter((id) => /llama-4|vision|scout|maverick/.test(id));
+    return v.sort((a, b) => (a.includes("maverick") ? -1 : 0) - (b.includes("maverick") ? -1 : 0)).slice(0, 3);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Looks at a customer's image and returns a short Arabic description (logo, design, product photo...).
+ * Returns null if no vision model is available; the bot still works without it.
+ */
+export async function describeImage(data: ArrayBuffer, mime: string): Promise<string | null> {
+  if (data.byteLength > 3.5 * 1024 * 1024 || !mime.startsWith("image/")) return null;
+  const url = `data:${mime};base64,${Buffer.from(data).toString("base64")}`;
+  for (const model of await visionModels()) {
+    try {
+      const res = await fetch(`${BASE}/chat/completions`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${KEY()}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model,
+          temperature: 0.2,
+          max_tokens: 200,
+          messages: [
+            {
+              role: "user",
+              content: [
+                {
+                  type: "text",
+                  text: "A customer of a uniform/cap factory sent this image on WhatsApp. In 1-2 short sentences in Arabic, say what it is (logo, design, photo of a product, size chart, screenshot...), the main colours, any readable text or brand name, and the product type/style if it is a garment or cap. No guesses beyond what is visible.",
+                },
+                { type: "image_url", image_url: { url } },
+              ],
+            },
+          ],
+        }),
+      });
+      if (!res.ok) continue;
+      const json = await res.json();
+      const text: string = json?.choices?.[0]?.message?.content?.trim() ?? "";
+      if (text) return text.slice(0, 400);
+    } catch {
+      // try the next model
+    }
+  }
+  return null;
 }

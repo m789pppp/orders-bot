@@ -24,6 +24,18 @@ export const PRODUCTS = `
 A customer can order several products in one request: collect each one and put them together in product_type / colors / sizes.
 `.trim();
 
+/** Photo albums the assistant can send to customers. Photos are uploaded from the dashboard (Catalog page). */
+export const CATALOG = [
+  { key: "caps", label: "كابات / Caps" },
+  { key: "hats", label: "قبعات / Hats" },
+  { key: "tshirts", label: "تيشيرتات وبولو / T-shirts" },
+  { key: "winter", label: "شتوي / Winter wear" },
+  { key: "workwear", label: "لبس شغل / Workwear" },
+  { key: "graduation", label: "تخرج / Graduation" },
+  { key: "embroidery", label: "نماذج تطريز وطباعة / Branding samples" },
+] as const;
+export type CatalogKey = (typeof CATALOG)[number]["key"];
+
 /** Fixed final messages. The AI never writes these. */
 export const THANK_YOU = {
   en: "Thank you for sharing your requirements with us! We have successfully received your request, and we will contact you as soon as possible.",

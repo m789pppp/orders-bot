@@ -43,3 +43,23 @@ export async function downloadMedia(mediaId: string): Promise<{ data: ArrayBuffe
   const data = await fileRes.arrayBuffer();
   return { data, mime: meta.mime_type ?? "application/octet-stream", size: data.byteLength };
 }
+
+/** Sends an image by public/signed link. Returns the WhatsApp message id, or null if it failed. */
+export async function sendImage(to: string, link: string, caption?: string): Promise<string | null> {
+  try {
+    const res = await fetch(`${GRAPH}/${(process.env.WHATSAPP_PHONE_NUMBER_ID ?? "").trim()}/messages`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token()}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ messaging_product: "whatsapp", to, type: "image", image: { link, ...(caption ? { caption } : {}) } }),
+    });
+    const json = await res.json();
+    if (!res.ok) {
+      console.error("[whatsapp] image send failed", res.status, JSON.stringify(json));
+      return null;
+    }
+    return json?.messages?.[0]?.id ?? null;
+  } catch (err) {
+    console.error("[whatsapp] image send error", err);
+    return null;
+  }
+}

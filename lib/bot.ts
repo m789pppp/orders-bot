@@ -1,6 +1,7 @@
 import { db, BUCKET } from "./supabase/admin";
-import { downloadMedia, sendText } from "./whatsapp";
-import { runAssistant, type ChatLine, type Draft } from "./ai";
+import { downloadMedia, sendImage, sendText } from "./whatsapp";
+import { describeImage, runAssistant, type ChatLine, type Draft } from "./ai";
+import { CATALOG } from "./config";
 import { THANK_YOU } from "./config";
 import { notifyNewOrder } from "./notify";
 
@@ -73,6 +74,11 @@ export async function saveIncoming(msg: WaMessage, profileName: string): Promise
         size_bytes: file.size,
         original_name: msg.document?.filename ?? null,
       });
+      // Let the assistant "see" the image: store a short description with the message.
+      const seen = await describeImage(file.data, file.mime);
+      if (seen) {
+        await supabase.from("messages").update({ body: [body, `(image: ${seen})`].filter(Boolean).join(" ") }).eq("wamid", msg.id);
+      }
     } catch (err) {
       console.error("[bot] media save failed", err);
       await supabase.from("messages").update({ error: String(err) }).eq("wamid", msg.id);
@@ -131,12 +137,20 @@ export async function replyToConversation(conversationId: string, wamid: string,
     .maybeSingle();
   const firstMessage = !(rows ?? []).some((m) => m.direction === "out");
 
+  // Which photo albums have photos right now.
+  const albums: string[] = [];
+  for (const c of CATALOG) {
+    const { data: files } = await supabase.storage.from(BUCKET).list(`catalog/${c.key}`, { limit: 1 });
+    if (files?.some((f) => f.name && !f.name.startsWith("."))) albums.push(c.key);
+  }
+
   let result;
   try {
     result = await runAssistant(history, (conv.draft ?? {}) as Draft, {
       filesCount: filesCount ?? 0,
       firstMessage,
       previousOrder: firstMessage ? recent?.order_code ?? null : null,
+      albums,
     });
   } catch (err) {
     console.error("[bot] AI failed", err);
@@ -156,6 +170,10 @@ export async function replyToConversation(conversationId: string, wamid: string,
   if (result.complete) {
     await submitOrder(conversationId, conv.customer_id, phone, result.draft, result.language);
     return;
+  }
+
+  if (result.sendCatalog) {
+    await sendAlbum(conversationId, phone, result.sendCatalog);
   }
 
   if (result.reply) {
@@ -208,4 +226,17 @@ async function submitOrder(conversationId: string, customerId: string, phone: st
   await supabase.from("messages").insert({ conversation_id: conversationId, wamid: outId, direction: "out", type: "text", body: thanks });
 
   await notifyNewOrder(order.order_code, d, phone);
+}
+
+/** Sends up to 4 photos of an album (uploaded from the dashboard Catalog page). */
+async function sendAlbum(conversationId: string, phone: string, key: string) {
+  const supabase = db();
+  const { data: files } = await supabase.storage.from(BUCKET).list(`catalog/${key}`, { limit: 4, sortBy: { column: "name", order: "asc" } });
+  for (const f of (files ?? []).filter((x) => x.name && !x.name.startsWith("."))) {
+    const path = `catalog/${key}/${f.name}`;
+    const { data } = await supabase.storage.from(BUCKET).createSignedUrl(path, 3600);
+    if (!data?.signedUrl) continue;
+    const outId = await sendImage(phone, data.signedUrl);
+    await supabase.from("messages").insert({ conversation_id: conversationId, wamid: outId, direction: "out", type: "image", body: `[catalog: ${key}]` });
+  }
 }
