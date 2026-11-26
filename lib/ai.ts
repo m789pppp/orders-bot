@@ -195,32 +195,41 @@ export function parseResult(text: string, previous: Draft): AiResult {
   };
 }
 
-/** Vision models to try: Groq's Llama 4 vision models, or the Gemini model (multimodal). */
-async function visionModels(): Promise<string[]> {
-  if (!GROQ) return Array.from(new Set([resolvedModel ?? PREFERRED, PREFERRED]));
-  try {
-    const all = await listModels();
-    const v = all.filter((id) => /llama-4|vision|scout|maverick/.test(id));
-    return v.sort((a, b) => (a.includes("maverick") ? -1 : 0) - (b.includes("maverick") ? -1 : 0)).slice(0, 3);
-  } catch {
-    return [];
+/** Vision options to try, in order: Groq vision models (if this key has any), then Gemini (if AI_API_KEY is set). */
+async function visionTargets(): Promise<{ base: string; key: string; model: string }[]> {
+  const targets: { base: string; key: string; model: string }[] = [];
+  if (GROQ) {
+    try {
+      const all = await listModels();
+      for (const m of all.filter((id) => /llama-4|vision|scout|maverick/.test(id)).slice(0, 2)) {
+        targets.push({ base: BASE, key: KEY(), model: m });
+      }
+    } catch {
+      // ignore
+    }
   }
+  const gemini = process.env.AI_API_KEY?.trim();
+  if (gemini) {
+    const gBase = "https://generativelanguage.googleapis.com/v1beta/openai";
+    for (const m of ["gemini-3.8-flash", "gemini-flash-latest", "gemini-3.5-flash"]) targets.push({ base: gBase, key: gemini, model: m });
+  }
+  return targets;
 }
 
 /**
  * Looks at a customer's image and returns a short Arabic description (logo, design, product photo...).
- * Returns null if no vision model is available; the bot still works without it.
+ * Returns null if no vision model answers; the bot still works without it.
  */
 export async function describeImage(data: ArrayBuffer, mime: string): Promise<string | null> {
   if (data.byteLength > 3.5 * 1024 * 1024 || !mime.startsWith("image/")) return null;
   const url = `data:${mime};base64,${Buffer.from(data).toString("base64")}`;
-  for (const model of await visionModels()) {
+  for (const t of await visionTargets()) {
     try {
-      const res = await fetch(`${BASE}/chat/completions`, {
+      const res = await fetch(`${t.base}/chat/completions`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${KEY()}`, "Content-Type": "application/json" },
+        headers: { Authorization: `Bearer ${t.key}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          model,
+          model: t.model,
           temperature: 0.2,
           max_tokens: 200,
           messages: [
@@ -242,7 +251,7 @@ export async function describeImage(data: ArrayBuffer, mime: string): Promise<st
       const text: string = json?.choices?.[0]?.message?.content?.trim() ?? "";
       if (text) return text.slice(0, 400);
     } catch {
-      // try the next model
+      // try the next one
     }
   }
   return null;
