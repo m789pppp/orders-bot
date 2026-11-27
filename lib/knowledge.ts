@@ -1,45 +1,77 @@
 /**
- * Everything the assistant knows about REGINA, taken from the company website
- * (regina.media321action.workers.dev). Update this file when the business changes.
+ * Everything the assistant knows about REGINA, collected from the company website
+ * (regina.media321action.workers.dev: home, about, caps, hats, t-shirts, winter, coverall, graduation, design studio).
+ * This is the ONLY source the assistant may answer from. Update it when the business changes.
  * Nothing here is a price, a date or a promise.
  */
 export const SITE = "https://regina.media321action.workers.dev";
 
 export const KNOWLEDGE = `
-COMPANY
-- REGINA (ريجينا): caps, uniform and workwear factory in Alexandria, Egypt, since 1983 (40+ years). Makes 20+ products in its own factory.
-- Multi-head computerised embroidery machines (precise on complex logos), high-capacity lines for large supply orders on schedule, colourfast dyes, solid finishing.
-- 150+ brands served; the website lists names such as Coca-Cola, Pepsi, McDonald's, Burger King, Domino's, Pizza Hut, Vodafone, Etisalat, Samsung, LG, Shell, Mobil, EgyptAir, FedEx, Nestlé, Mercedes-Benz, Honda, Jotun, Sika, Pirelli, Petrojet, AASTMT, Cambridge International Education. Also large governmental bodies. Mention a few names only if the customer asks about experience or clients.
-- Sectors: company uniforms, field/engineering teams, outdoor events, factories and industry, kitchens/restaurants, security, schools and universities, events and gifts.
+=== WHO WE ARE ===
+- REGINA (ريجينا): Egyptian factory for caps, uniforms and workwear in Alexandria, since 1983 (40+ years).
+- We manufacture 20+ products in our OWN factory (no middleman): "fair price straight from the factory".
+- Multi-head computerised embroidery machines (precise even on complex logos), high-capacity production lines for large supply orders on schedule, colourfast dyes, solid finishing, strict quality and colour-fastness standards.
+- 150+ brands served. The website lists names such as Coca-Cola, Pepsi, McDonald's, Burger King, Domino's, Pizza Hut, Vodafone, Etisalat, Samsung, LG, Shell, Mobil, EgyptAir, FedEx, Nestlé, Mercedes-Benz, Honda, Jotun, Sika, Pirelli, Petrojet, AASTMT, Cambridge International Education; plus large governmental bodies (e.g. caps and t-shirts for naval sectors, commemorative caps for the New Suez Canal opening). Mention 3-4 names only when asked about experience/clients.
+- Sectors we serve: company uniforms, field and engineering teams, outdoor events, factories and industry, kitchens and restaurants, security teams, schools and universities, events and gifts.
+
+=== CONTACT ===
 - Address: 15 El Nasr St., El Mansheya, Alexandria (١٥ شارع النصر، المنشية، الإسكندرية).
-- Phones: 03 4806229, 01002882044, 01220225303. WhatsApp: 01211777728. Facebook: facebook.com/Regina.Hats.Alex
-- Hours: 9:00 am to 6:00 pm, closed on Sunday.
+- Phones: 03 4806229 / 01002882044 / 01220225303. WhatsApp: 01211777728. Facebook: facebook.com/Regina.Hats.Alex
+- Hours: 9:00 am to 6:00 pm, closed Sunday.
+- Website: ${SITE}
 
-PRODUCTS (page links can be shared)
-Caps (${SITE}/caps.html):
-- Classic cap (كاب عادي): best seller, raised embroidery, colourfast.
-- Regina cap (كاب ريجينا): denim, hard-wearing.
-- Chef cap (كاب شيف): 100% cotton, breathable, made for kitchen heat.
-- Air Force cap (كاب القوات الجوية): disciplined uniform look, high-precision embroidery, popular for security teams.
-- Faroukia (فاروقية): royal classic style.
-- Bandana (بندانة): light, mesh ventilation, one size.
-- Visor (فايزر): wide shade for face and eyes, sun protection.
-Hats (${SITE}/hats.html): Safari (سفاري, premium cotton, sun protection, trips), Bob hat (بوب, light, all-round shade), Safari with cord (سفاري بحبل, heavy cotton, wind/desert resistant), Commando (كوماندو, tactical, short brim, reinforced stitching). For field teams, engineers, outdoor events.
-T-shirts (${SITE}/tshirts.html): Polo (بولو, 100% cotton, smart formal look, embroidered logo), Basic round neck (بيرزك / راوند, 100% cotton, breathable, resists pilling and fading). Branding by embroidery or screen print (سلك سكرين).
-Winter (${SITE}/winter.html): Jacket (جاكيت, heavy, cold and rain proof, wear resistant), Hoodie (هودي, wind and cold proof), Crew neck sweatshirt (حوض, no hood, ribbed neck, everyday wear).
-Workwear: Coverall (أوفرول, heavy duty, tool pockets, freedom of movement, for factory/maintenance/technicians, ${SITE}/coverall.html), Waist apron (إيبرون, heat and wash resistant), Bib apron (مريلة, chest cover, neck strap, front pockets).
-Graduation (${SITE}/graduation.html): gown + cap set in the faculty's colour, made to students' sizes, with institution logo and graduation year. Delivered before the ceremony on a date fixed in the contract.
-Custom: any special design or specification can be made by the technical team.
-Not on the website (say the team will confirm): exact fabric weights, colour palettes, size charts.
+=== PRODUCTS (recommend by use, and share the page link when helpful) ===
+CAPS — ${SITE}/caps.html
+- كاب عادي (Classic): our best seller; raised embroidery; colourfast. Good all-round company cap.
+- كاب ريجينا (Regina): denim, very hard-wearing. Good for a premium/casual brand look.
+- كاب شيف (Chef): 100% cotton, breathable, made for kitchen heat. -> restaurants, kitchens, cafés.
+- كاب القوات الجوية (Air Force): disciplined uniform look with high-precision embroidery. -> security teams, guards, official teams.
+- الفاروقية (Faroukia): royal classic style. -> formal/official occasions.
+- بندانة (Bandana): light, mesh ventilation, one size. -> kitchens, workshops, events.
+- فايزر (Visor): wide shade for face and eyes, comfortable fabric. -> sun, outdoor events, sports, beaches.
+HATS — ${SITE}/hats.html
+- سفاري (Safari): premium cotton, sun protection. -> trips, camping, field work.
+- بوب هات (Bob): light, all-round shade. -> outdoor events, youth campaigns.
+- سفاري بحبل (Safari with cord): heavy cotton, wind and desert resistant. -> desert sites, engineers, expeditions.
+- كوماندو (Commando): tactical cut, short brim, reinforced stitching. -> field/tactical teams.
+T-SHIRTS — ${SITE}/tshirts.html
+- بولو (Polo): 100% cotton, smart formal look, professional embroidered logo. -> company staff, sales, reception, events.
+- بيرزك / راوند (Basic round neck): 100% cotton, breathable, resists pilling and fading, accurate sizing. -> events, campaigns, giveaways, daily uniform.
+- Branding: embroidery (تطريز) or screen print (سلك سكرين).
+WINTER — ${SITE}/winter.html
+- جاكيت (Jacket): heavy, cold and rain proof, wear resistant, freedom of movement. -> outdoor staff in winter, security, drivers.
+- هودي (Hoodie): modern, wind and cold proof. -> teams, students, events.
+- حوض (Crew neck sweatshirt): no hood, ribbed neck, everyday wear.
+WORKWEAR — ${SITE}/coverall.html
+- أوفرول (Coverall): heavy duty, tool pockets, withstands work pressure, full freedom of movement. -> factories, maintenance, technicians.
+- إيبرون (Waist apron): heat and wash resistant. -> kitchens, cafés, shops.
+- مريلة (Bib apron): chest cover, neck strap, front pockets. -> kitchens, workshops, salons.
+GRADUATION — ${SITE}/graduation.html
+- Gown (روب) + cap (كاب) set, in the faculty's colour, made to the students' sizes, with institution logo and graduation year; delivered before the ceremony on a date fixed in the contract. -> universities and schools.
+CUSTOM: any special design or specification can be produced by our technical team from the customer's details.
+NOT ON THE WEBSITE (always say the team will confirm): exact fabric weights, full colour palettes, size charts and size ranges, minimum quantities, prices, payment terms, exact delivery dates.
 
-BRANDING AND DESIGN STUDIO
-- Logos embroidered or printed, in the customer's colours, at the position they choose.
-- Free online Design Studio: ${SITE}/customize.html : 3D preview of polo (short/long sleeve), round-neck T-shirt and cap; upload a logo (PNG transparent, SVG or JPG), place it (chest centre/left/right, pocket, centre), set size, choose fabric/sleeve/collar/pocket colours (caps: crown, brim, button), then "Send This Design for a Quote" to WhatsApp. If 3D doesn't open, use Chrome/Safari or just send the logo here.
+=== BRANDING AND THE DESIGN STUDIO ===
+- Logos are embroidered or printed, in the customer's colours, at the position they choose.
+- Free online Design Studio: ${SITE}/customize.html
+  3D preview of polo (short and long sleeve), round-neck T-shirt and cap; rotate 360°; upload logo (PNG with transparent background, SVG or JPG); place it (chest centre/left/right, pocket, centre), resize and tilt; choose colours (shirts: body, sleeves, collar/placket/cuffs, pocket; caps: crown, brim and strap, top button); then press "Send This Design for a Quote" to send it on WhatsApp. If the 3D view doesn't open, use Chrome or Safari, or just send the logo here and the team prepares a mockup.
 
-HOW ORDERING WORKS
-1. Customer sends logo, products and quantities. 2. Team sends a price quote that fits the order size. 3. A real sample is made with the logo; production starts only after the customer approves it. 4. Delivery to the company or factory door in any Egyptian governorate, on a delivery date written in the contract.
-- Minimum quantity: depends on product and branding method; the team confirms it with the quote.
-- Lead time: depends on quantity and model; fixed in the contract.
-- Manufacturing defect (piece differs from the approved sample): remade or replaced at no extra cost.
-- Prices: fair factory prices, quoted by the team only. Payment terms: not stated, the team explains them.
+=== HOW ORDERING WORKS (our real process) ===
+1. Send the logo + the products + approximate quantities (here on WhatsApp).
+2. The team sends a price quote suited to the order size.
+3. A REAL SAMPLE is made with the logo embroidered/printed; production starts only after the customer approves it.
+4. Delivery to the company/factory door in any Egyptian governorate, on a delivery date written in the contract.
+
+=== OUR ANSWERS TO COMMON QUESTIONS (say them in natural Egyptian Arabic) ===
+- "فيه عينة؟" -> أيوه، العينة أساسية في كل طلب: بنطرّز أو نطبع اللوجو على قطعة حقيقية الأول، ومفيش إنتاج غير بعد موافقتك عليها.
+- "أقل كمية كام؟" -> بتختلف حسب المنتج وطريقة الطباعة أو التطريز؛ ابعتلنا المنتج والكمية التقريبية والفريق يأكدلك.
+- "الطلب بياخد قد إيه؟" -> حسب الكمية والموديل، والفريق بيحدد ميعاد تسليم ثابت مكتوب في العقد، والإنتاج بيبدأ بعد اعتماد التصميم.
+- "بتشحنوا لمحافظتي؟" -> أيوه، بنوصّل لكل محافظات مصر لحد باب الشركة أو المصنع.
+- "لو في عيب؟" -> لو أي قطعة طلعت مختلفة عن العينة المعتمدة بسبب عيب تصنيع، بنعيدها أو نبدّلها من غير أي تكلفة إضافية.
+- "الخامة بتستحمل؟" -> خاماتنا مختارة للشغل اليومي والغسيل المتكرر، والتيشيرتات والبولو قطن 100%.
+- "ينفع تصميم مخصوص؟" -> أكيد، ابعتلنا التفاصيل والفريق الفني ينفذها.
+- "ممكن أشوف شكل اللوجو على المنتج؟" -> استخدم استوديو التصميم (${SITE}/customize.html) أو ابعت اللوجو هنا والفريق يعملك تصور.
+- "انتو فين؟" -> مصنعنا ومكتبنا في ١٥ شارع النصر، المنشية، إسكندرية.
+- "مين اشتغل معاكم؟" -> أكتر من 150 براند من أكتر من 40 سنة، زي (اذكر 3-4 أسماء من القائمة).
+- "ليه أختاركم؟" -> مصنع من 1983 بيصنّع بنفسه (سعر مصنع عادل)، تطريز كمبيوتر دقيق، عينة قبل الإنتاج، وميعاد تسليم ثابت في العقد.
 `.trim();
