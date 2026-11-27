@@ -1,6 +1,6 @@
 /**
  * Everything the assistant knows about REGINA, collected from the company website
- * (regina.media321action.workers.dev: home, about, caps, hats, t-shirts, winter, coverall, graduation, design studio).
+ * (regina.media321action.workers.dev: home + FAQ, about, design studio, every category and product page).
  * This is the ONLY source the assistant may answer from. Update it when the business changes.
  * Nothing here is a price, a date or a promise.
  */
@@ -17,39 +17,40 @@ export const KNOWLEDGE = `
 === CONTACT ===
 - Address: 15 El Nasr St., El Mansheya, Alexandria (١٥ شارع النصر، المنشية، الإسكندرية).
 - Phones: 03 4806229 / 01002882044 / 01220225303. WhatsApp: 01211777728. Facebook: facebook.com/Regina.Hats.Alex
-- Hours: 9:00 am to 6:00 pm, closed Sunday.
+- Hours: every day 9:00 am to 6:00 pm, except Sunday (closed).
 - Website: ${SITE}
 
-=== PRODUCTS (recommend by use, and share the page link when helpful) ===
-CAPS — ${SITE}/caps.html
-- كاب عادي (Classic): our best seller; raised embroidery; colourfast. Good all-round company cap.
-- كاب ريجينا (Regina): denim, very hard-wearing. Good for a premium/casual brand look.
-- كاب شيف (Chef): 100% cotton, breathable, made for kitchen heat. -> restaurants, kitchens, cafés.
-- كاب القوات الجوية (Air Force): disciplined uniform look with high-precision embroidery. -> security teams, guards, official teams.
-- الفاروقية (Faroukia): royal classic style. -> formal/official occasions.
-- بندانة (Bandana): light, mesh ventilation, one size. -> kitchens, workshops, events.
-- فايزر (Visor): wide shade for face and eyes, comfortable fabric. -> sun, outdoor events, sports, beaches.
-HATS — ${SITE}/hats.html
-- سفاري (Safari): premium cotton, sun protection. -> trips, camping, field work.
-- بوب هات (Bob): light, all-round shade. -> outdoor events, youth campaigns.
-- سفاري بحبل (Safari with cord): heavy cotton, wind and desert resistant. -> desert sites, engineers, expeditions.
-- كوماندو (Commando): tactical cut, short brim, reinforced stitching. -> field/tactical teams.
-T-SHIRTS — ${SITE}/tshirts.html
-- بولو (Polo): 100% cotton, smart formal look, professional embroidered logo. -> company staff, sales, reception, events.
-- بيرزك / راوند (Basic round neck): 100% cotton, breathable, resists pilling and fading, accurate sizing. -> events, campaigns, giveaways, daily uniform.
-- Branding: embroidery (تطريز) or screen print (سلك سكرين).
-WINTER — ${SITE}/winter.html
-- جاكيت (Jacket): heavy, cold and rain proof, wear resistant, freedom of movement. -> outdoor staff in winter, security, drivers.
-- هودي (Hoodie): modern, wind and cold proof. -> teams, students, events.
-- حوض (Crew neck sweatshirt): no hood, ribbed neck, everyday wear.
-WORKWEAR — ${SITE}/coverall.html
-- أوفرول (Coverall): heavy duty, tool pockets, withstands work pressure, full freedom of movement. -> factories, maintenance, technicians.
-- إيبرون (Waist apron): heat and wash resistant. -> kitchens, cafés, shops.
-- مريلة (Bib apron): chest cover, neck strap, front pockets. -> kitchens, workshops, salons.
-GRADUATION — ${SITE}/graduation.html
-- Gown (روب) + cap (كاب) set, in the faculty's colour, made to the students' sizes, with institution logo and graduation year; delivered before the ceremony on a date fixed in the contract. -> universities and schools.
-CUSTOM: any special design or specification can be produced by our technical team from the customer's details.
-NOT ON THE WEBSITE (always say the team will confirm): exact fabric weights, full colour palettes, size charts and size ranges, minimum quantities, prices, payment terms, exact delivery dates.
+=== PRODUCTS (recommend by use; share the product page link when helpful) ===
+CAPS (الكابات) — ${SITE}/caps.html
+- كاب عادي (Classic) ${SITE}/classic-cap.html : the most requested cap for companies outfitting their teams; our best seller; classic comfortable shape for daily wear; clean RAISED embroidery of the logo; colourfast. -> any company team, daily uniform.
+- كاب ريجينا (Regina) ${SITE}/regina-cap.html : denim (جينز), very hard-wearing, embroidered; a uniform that lasts the team for years. -> premium/casual brand look, long-lasting uniform.
+- كاب شيف (Chef) ${SITE}/chef-cap.html : "the professional standard for big kitchens and hotels"; soft 100% cotton, excellent airflow under heat, easy to wash, keeps its shape and clean look. -> chefs, restaurants, hotels.
+- بندانة شيف (Bandana) ${SITE}/bandana.html : cotton with a mesh ventilation panel at the back; light, stays firmly in place the whole shift; one comfortable size for everyone. -> restaurant chains, site work.
+- كاب فايزر (Visor) ${SITE}/visor.html : modern design, protects from sun and UV, wide brim shading face and eyes, ADJUSTABLE strap, bright sharp look. -> teams at events, marketing campaigns, outdoor.
+- كاب القوات الجوية (Air Force) ${SITE}/air-force-cap.html : made for security and guarding staff; formal sharp look, wide band, high-precision embroidery; a symbol of discipline. -> security companies, guards.
+- كاب الفاروقية (Faroukia) ${SITE}/faroukia-cap.html : luxurious royal design inspired by King Farouk's era (the cap was named after King Farouk after a shooting practice in 1943); classic. -> formal, heritage or official occasions.
+HATS (البرانيط) — ${SITE}/hats.html
+- برنيطة سفاري (Safari) ${SITE}/safari-hat.html : heavyweight premium cotton, wide brim protecting face and neck from strong sun, embroidered logo. -> trips, camping, field teams.
+- برنيطة بوب هات (Bob) ${SITE}/bob-hat.html : modern, lightweight, all-round shade, folds and stores easily. -> promotional campaigns, outdoor events.
+- برنيطة سفاري بحبل (Safari with chin cord) ${SITE}/safari-hat-with-cord.html : heavyweight premium cotton for repeated use, wide sun protection, chin cord keeps it secure in wind and desert; professional expedition look. -> desert sites, field expeditions, engineers.
+- برنيطة كوماندو (Commando) ${SITE}/commando-hat.html : tactical cut, short brim, reinforced stitching, embroidered logo, for daily field use. -> security and field teams.
+T-SHIRTS (تيشيرتات) — ${SITE}/tshirts.html
+- تيشيرت بولو (Polo) ${SITE}/polo-shirt.html : 100% cotton, premium formal cut, professional logo embroidery ON THE CHEST; makes the team look professional in front of clients. -> staff who meet clients, sales, reception, company teams.
+- تيشيرت رقبة روند / بيرزك (Round neck) ${SITE}/round-neck-tshirt.html : premium 100% cotton, breathable, resists pilling and fading, precise sizing; logo printed or embroidered; the everyday essential of any uniform. -> daily uniforms, events, campaigns, gifts.
+WINTER (الشتوي) — ${SITE}/winter.html
+- جاكيت شتوي (Winter jacket) ${SITE}/winter-jacket.html : heavyweight fabrics, cold and rain proof, wear resistant, comfort and freedom of movement; "maximum protection for your team in winter". -> outdoor staff in winter, security, drivers.
+- سويت شيرت (Sweatshirt) ${SITE}/sweatshirt.html : resists pilling and shrinking with daily use; comes as hoodie or crew neck.
+- هودي (Hoodie) ${SITE}/hoodie.html : heavyweight fabric, hood (كابوشون) that blocks wind and cold, modern sharp design, freedom of movement; logo embroidered or printed. -> field teams, company winter uniform, students.
+- حوض (Crew neck) ${SITE}/crew-neck-sweatshirt.html : no hood, ribbed neck (رقبة أستك), fits under a jacket; practical everyday winter uniform.
+WORKWEAR (ملابس عمل)
+- أوفرول (Coverall) ${SITE}/coverall.html : heavy duty for workers and technicians in tough industrial environments, practical tool pockets, withstands work pressure, full freedom of movement. -> factories, maintenance, technicians.
+- ايبيرون (Waist apron) ${SITE}/apron.html : treated heat-resistant fabric, adjustable ties, optional pocket; neat professional look all shift. -> cafés, baristas, restaurant service, kitchens.
+- مريلة (Bib apron) ${SITE}/bib-apron.html : full chest coverage against stains and spills, neck strap, waist tie, reinforced seams; shows the venue's identity. -> kitchen and service teams, manufacturing teams.
+GRADUATION (التخرج) — ${SITE}/graduation.html
+- روب تخرج (Gown) ${SITE}/graduation-gown.html : premium flowing fabric, precise tailoring and finishing, colours can be combined, the university/school crest embroidered in detail; made to the students' sizes. -> universities, schools, institutions.
+- كاب تخرج (Graduation cap) ${SITE}/graduation-cap.html : premium materials that keep their shape, tassel (شرابة) in the faculty's colour, graduation year embroidered, logo; made for the graduation photo. Sample first, then the full class quantity; delivered before the ceremony.
+CUSTOM: any special model or specification for a company can be produced exactly by our technical team from the customer's details.
+NOT ON THE WEBSITE (always say the team will confirm): fabric weights/composition where not stated above, colour palettes, size charts and ranges, minimum quantities, prices, payment terms, exact delivery dates.
 
 === BRANDING AND THE DESIGN STUDIO ===
 - Logos are embroidered or printed, in the customer's colours, at the position they choose.
@@ -73,5 +74,6 @@ NOT ON THE WEBSITE (always say the team will confirm): exact fabric weights, ful
 - "ممكن أشوف شكل اللوجو على المنتج؟" -> استخدم استوديو التصميم (${SITE}/customize.html) أو ابعت اللوجو هنا والفريق يعملك تصور.
 - "انتو فين؟" -> مصنعنا ومكتبنا في ١٥ شارع النصر، المنشية، إسكندرية.
 - "مين اشتغل معاكم؟" -> أكتر من 150 براند من أكتر من 40 سنة، زي (اذكر 3-4 أسماء من القائمة).
-- "ليه أختاركم؟" -> مصنع من 1983 بيصنّع بنفسه (سعر مصنع عادل)، تطريز كمبيوتر دقيق، عينة قبل الإنتاج، وميعاد تسليم ثابت في العقد.
+- "ليه أختاركم؟" -> 3 أسباب: سعر مصنع عادل لأننا بنصنّع بنفسنا من 1983، خامة بتستحمل الغسيل والشغل اليومي، والتزام تام بميعاد التسليم المكتوب في العقد. وكمان عينة حقيقية قبل الإنتاج وتطريز كمبيوتر دقيق.
+- "المواعيد؟" -> كل يوم من 9 الصبح لـ 6 المسا ما عدا الأحد، وهنا على الواتساب بنستقبل طلبك في أي وقت.
 `.trim();
